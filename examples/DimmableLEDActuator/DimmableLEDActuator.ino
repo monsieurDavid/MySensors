@@ -40,7 +40,9 @@
 
 // Enable and select radio type attached
 #define MY_RADIO_NRF24
+//#define MY_RADIO_NRF5_ESB
 //#define MY_RADIO_RFM69
+//#define MY_RADIO_RFM95
 
 #include <MySensors.h>
 
@@ -60,15 +62,16 @@ MyMessage lightMsg(0, V_LIGHT);
  */
 void setup()
 {
-  // Pull the gateway's current dim level - restore light level upon sendor node power-up
-  request( 0, V_DIMMER );
+	// Pull the gateway's current dim level - restore light level upon sendor node power-up
+	request( 0, V_DIMMER );
 }
 
-void presentation() {
-  // Register the LED Dimmable Light with the gateway
-  present( 0, S_DIMMER );
+void presentation()
+{
+	// Register the LED Dimmable Light with the gateway
+	present( 0, S_DIMMER );
 
-  sendSketchInfo(SN, SV);
+	sendSketchInfo(SN, SV);
 }
 
 /***
@@ -80,46 +83,48 @@ void loop()
 
 
 
-void receive(const MyMessage &message) {
-  if (message.type == V_LIGHT || message.type == V_DIMMER) {
+void receive(const MyMessage &message)
+{
+	if (message.type == V_LIGHT || message.type == V_DIMMER) {
 
-    //  Retrieve the power or dim level from the incoming request message
-    int requestedLevel = atoi( message.data );
+		//  Retrieve the power or dim level from the incoming request message
+		int requestedLevel = atoi( message.data );
 
-    // Adjust incoming level if this is a V_LIGHT variable update [0 == off, 1 == on]
-    requestedLevel *= ( message.type == V_LIGHT ? 100 : 1 );
+		// Adjust incoming level if this is a V_LIGHT variable update [0 == off, 1 == on]
+		requestedLevel *= ( message.type == V_LIGHT ? 100 : 1 );
 
-    // Clip incoming level to valid range of 0 to 100
-    requestedLevel = requestedLevel > 100 ? 100 : requestedLevel;
-    requestedLevel = requestedLevel < 0   ? 0   : requestedLevel;
+		// Clip incoming level to valid range of 0 to 100
+		requestedLevel = requestedLevel > 100 ? 100 : requestedLevel;
+		requestedLevel = requestedLevel < 0   ? 0   : requestedLevel;
 
-    Serial.print( "Changing level to " );
-    Serial.print( requestedLevel );
-    Serial.print( ", from " );
-    Serial.println( currentLevel );
+		Serial.print( "Changing level to " );
+		Serial.print( requestedLevel );
+		Serial.print( ", from " );
+		Serial.println( currentLevel );
 
-    fadeToLevel( requestedLevel );
+		fadeToLevel( requestedLevel );
 
-    // Inform the gateway of the current DimmableLED's SwitchPower1 and LoadLevelStatus value...
-    send(lightMsg.set(currentLevel > 0));
+		// Inform the gateway of the current DimmableLED's SwitchPower1 and LoadLevelStatus value...
+		send(lightMsg.set(currentLevel > 0));
 
-    // hek comment: Is this really nessesary?
-    send( dimmerMsg.set(currentLevel) );
+		// hek comment: Is this really nessesary?
+		send( dimmerMsg.set(currentLevel) );
 
 
-    }
+	}
 }
 
 /***
  *  This method provides a graceful fade up/down effect
  */
-void fadeToLevel( int toLevel ) {
+void fadeToLevel( int toLevel )
+{
 
-  int delta = ( toLevel - currentLevel ) < 0 ? -1 : 1;
+	int delta = ( toLevel - currentLevel ) < 0 ? -1 : 1;
 
-  while ( currentLevel != toLevel ) {
-    currentLevel += delta;
-    analogWrite( LED_PIN, (int)(currentLevel / 100. * 255) );
-    delay( FADE_DELAY );
-  }
+	while ( currentLevel != toLevel ) {
+		currentLevel += delta;
+		analogWrite( LED_PIN, (int)(currentLevel / 100. * 255) );
+		delay( FADE_DELAY );
+	}
 }
